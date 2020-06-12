@@ -1,0 +1,45 @@
+*.tgz
+*.tar
+*.zip
+
+# C extensions
+*.so
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+develop-eggs/
+eggs/
+.eggs/
+lib/
+lib64/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+pip-log.txt
+pip-delete-this-directory.txt
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+*.mo
+*.pot
+*.log
+.python-version
+.env
+env/
+
+# GoLang
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+vendor/
+.tool.version
+out

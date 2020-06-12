@@ -1,0 +1,42 @@
+#!/bin/sh
+# Copyright 2012 The Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+
+# git gofmt pre-commit hook
+#
+# To use, store as .git/hooks/pre-commit inside your repository and make sure
+# it has execute permissions.
+
+# This script does not handle file names that contain spaces.
+
+
+golint() {
+  docker run --rm -v $PWD:/work --entrypoint golint edb-tool_golint "$@"
+}
+
+
+
+lint() {
+  cd ./go/src
+  for PROJECT in $(ls ./ )
+  do
+
+    if [ -d ./$PROJECT ]
+    then
+      golint $PROJECT/...
+    fi
+
+  done
+}
+
+
+
+BAD=$(lint)
+
+[ -z "$BAD" ] && exit 0
+
+echo "golint failed: "
+echo $BAD
+
+exit 1

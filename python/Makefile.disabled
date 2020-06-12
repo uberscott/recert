@@ -1,0 +1,13 @@
+all: test format build
+build:
+	../bash/loop.sh build
+test:
+	../bash//loop.sh test
+test_pylint:
+	../bash//loop.sh test_pylint
+test_flake8:
+	../bash//loop.sh test_flake8
+test_coverage:
+	../bash//loop.sh test_coverage
+format:
+	../bash//loop.sh format

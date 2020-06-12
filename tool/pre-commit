@@ -1,0 +1,7 @@
+
+./tool/check-go-fmt && ./tool/check-go-lint && ./tool/check-helm-lint && ./tool/check-bash
+
+
+exit $?
+
+

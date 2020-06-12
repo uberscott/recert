@@ -1,0 +1,51 @@
+{{- if .Values.service.masterType }}
+apiVersion: v1
+kind: Service
+metadata:
+  name:  {{ template "edb.name" . }}-master
+  labels:
+    role: loadbalancer
+    cluster:  {{ template "edb.name" . }}
+  annotations:
+    {{- if .Values.commonAnnotations }}
+    {{- include "edb.tplValue" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+    {{- end }}
+    {{- with .Values.service.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    cluster: {{ template "edb.name" . }}
+    role: master
+  ports:
+  - port: {{ default 5444 .Values.pgconfig.port }}
+    targetPort: {{ default 5444 .Values.pgconfig.port }}
+  sessionAffinity: None
+  type: {{ .Values.service.masterType }}
+---
+{{- end }}
+{{- if .Values.service.standbyType }}
+apiVersion: v1
+kind: Service
+metadata:
+  name:  {{ template "edb.name" . }}-standby
+  labels:
+    role: loadbalancer
+    cluster:  {{ template "edb.name" . }}
+  annotations:
+    {{- if .Values.commonAnnotations }}
+    {{- include "edb.tplValue" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+    {{- end }}
+    {{- with .Values.service.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    cluster: {{ template "edb.name" . }}
+    role: standby
+  ports:
+  - port: {{ default 5444 .Values.pgconfig.port }}
+    targetPort: {{ default 5444 .Values.pgconfig.port }}
+  sessionAffinity: None
+  type: {{ .Values.service.standbyType }}
+{{- end }}
