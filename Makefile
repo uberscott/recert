@@ -23,6 +23,7 @@ clean:
 	rm -rf out
 
 build-operator-helm:
+	cd go/src/operator && make crds
 	cd helm/operator && make
 
 deploy-operator: build-docker build-operator-helm 

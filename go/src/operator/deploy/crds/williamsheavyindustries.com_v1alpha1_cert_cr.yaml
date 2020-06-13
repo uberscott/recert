@@ -1,7 +1,0 @@
-apiVersion: williamsheavyindustries.com/v1alpha1
-kind: Cert
-metadata:
-  name: example-cert
-spec:
-  # Add fields here
-  size: 3

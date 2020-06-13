@@ -1,2 +1,3 @@
-recertOperator : gcr.io/williams-heavy-industries/recert-operator 
-recertNginx: gcr.io/williams-heavy-industries/recert-nginx
+recertOperator : gcr.io/williams-heavy-industries/recert-operator:latest
+recertNginx: gcr.io/williams-heavy-industries/recert-nginx:latest
+recertCertbot: gcr.io/williams-heavy-industries/recert-certbot:latest

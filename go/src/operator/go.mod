@@ -3,6 +3,7 @@ module operator
 go 1.13
 
 require (
+	github.com/go-logr/logr v0.1.0
 	github.com/gruntwork-io/terratest v0.28.4 // indirect
 	github.com/operator-framework/operator-sdk v0.18.0
 	github.com/spf13/pflag v1.0.5

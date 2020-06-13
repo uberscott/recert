@@ -67,7 +67,7 @@ rules:
   verbs:
   - get
 - apiGroups:
-  - williamsheavyindustries.com
+  - mightydevco.com
   resources:
   - '*'
   - sslproxies

@@ -15,6 +15,12 @@ build:
     docker:
       dockerfile: docker/nginx/Dockerfile
 
+  - image: gcr.io/williams-heavy-industries/recert-certbot
+    context: docker/certbot
+    docker:
+      dockerfile: Dockerfile
+
+
   tagPolicy:
     gitCommit: {}
 

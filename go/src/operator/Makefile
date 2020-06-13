@@ -1,6 +1,5 @@
 crds:
 	operator-sdk generate crds
-	#openapi-gen --logtostderr=true -o "" -i ./pkg/apis/enterprisedb/v1alpha1 -O zz_generated.openapi -p ./pkg/apis/enterprisedb/v1alpha1 -h ./boilerplate.go.txt -r "-"
 	operator-sdk generate k8s
 
 
