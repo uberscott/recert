@@ -1,0 +1,2 @@
+recertOperator : gcr.io/williams-heavy-industries/recert-operator 
+recertNginx: gcr.io/williams-heavy-industries/recert-nginx

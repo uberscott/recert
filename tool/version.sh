@@ -8,6 +8,6 @@ VERSION=$1
 
 echo "setting the project version to $VERSION"
 
-find . -name .edb-version.sh -exec {} $VERSION \;
+find . -name .version.sh -exec {} $VERSION \;
 
 echo $VERSION > VERSION

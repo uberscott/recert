@@ -3,7 +3,7 @@
 
 shellcheck()
 {
-  docker run --rm -v "$PWD":/work --entrypoint shellcheck edb-tool_shellcheck "$@"
+  docker run --rm -v "$PWD":/work --entrypoint shellcheck tool_shellcheck "$@"
 }
 
 

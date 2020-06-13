@@ -5,7 +5,7 @@ set -e
 cd $(dirname $0)/..
 
 pwd 
-echo "building edb-tool"
+echo "building tool"
 
 
 for TOOL in $(ls ./tool)
@@ -15,7 +15,7 @@ do
   then
     echo 
     echo "Building $TOOL"
-    docker build . -f tool/$TOOL/Dockerfile --tag edb-tool_$TOOL
+    docker build . -f tool/$TOOL/Dockerfile --tag tool_$TOOL
   fi
 
 done

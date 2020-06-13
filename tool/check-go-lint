@@ -12,7 +12,7 @@
 
 
 golint() {
-  docker run --rm -v $PWD:/work --entrypoint golint edb-tool_golint "$@"
+  docker run --rm -v $PWD:/work --entrypoint golint tool_golint "$@"
 }
 
 

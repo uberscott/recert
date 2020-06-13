@@ -1,7 +1,0 @@
-Your Release is named {{ .Release.Name | quote }}
-- A minimum of {{ template "edb.replicas" . }} nodes is needed for your cluster.
-{{- if default 0 .Values.replication.standbys }}
-- {{ template "edb.replicas" . }} EPAS pods should be running in your cluster, each on a different node.
-{{- end }}
-
-For further details, refer to the README.md
