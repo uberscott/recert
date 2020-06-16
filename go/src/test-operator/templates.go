@@ -21,9 +21,9 @@ kind: SSLProxy
 metadata:
   name: {{ .Name }}
 spec:
-  {{- if .IsFullTest }}
+  {{ if .IsFullTest }}
   loadBalancerIP: {{ .LoadBalancerIP }}
-  {{- end }} 
+  {{ end }} 
   reverseProxy: http://{{ .Name }}:80
   replicas: 1`,
 

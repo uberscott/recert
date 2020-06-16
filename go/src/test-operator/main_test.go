@@ -1,6 +1,7 @@
 package testoperator
 
 import (
+	"fmt"
 	http_helper "github.com/gruntwork-io/terratest/modules/http-helper"
 	"github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/gruntwork-io/terratest/modules/retry"
@@ -20,7 +21,6 @@ type Stage struct {
 }
 
 func createStage() *Stage {
-
 	conf := loadConf()
 	stage := Stage{
 		Conf:      conf,
@@ -30,7 +30,14 @@ func createStage() *Stage {
 	return &stage
 }
 
-func (stage *Stage) unstage(t *testing.T) {
+func (stage *Stage) logConf() {
+	fmt.Printf("Conf.Name: %v\n", stage.Conf.Name)
+	fmt.Printf("Conf.IsFullTest: %v\n", stage.Conf.IsFullTest)
+	fmt.Printf("Conf.LoadBalancerIP: %v\n", stage.Conf.LoadBalancerIP)
+	fmt.Printf("Conf.StageTeardown: %v\n\n", stage.Conf.StageTeardown)
+}
+
+func (stage *Stage) unStage(t *testing.T) {
 	defer k8s.KubectlDeleteFromString(t, stage.Options, stage.Templates.ServiceTemplate)
 	defer k8s.KubectlDeleteFromString(t, stage.Options, stage.Templates.DeploymentTemplate)
 	defer k8s.KubectlDeleteFromString(t, stage.Options, stage.Templates.SslProxyTemplate)
@@ -41,8 +48,9 @@ func (stage *Stage) unstage(t *testing.T) {
  */
 func (stage *Stage) stage(t *testing.T) {
 
+	fmt.Printf("***> stage.Conf.StageTeardown %v <***\n", stage.Conf.StageTeardown)
 	if stage.Conf.StageTeardown {
-		stage.unstage(t)
+		stage.unStage(t)
 	}
 
 	k8s.KubectlApplyFromString(t, stage.Options, stage.Templates.ServiceTemplate)
@@ -60,6 +68,18 @@ func (stage *Stage) stage(t *testing.T) {
 	// wait for services that the operator should create
 	k8s.WaitUntilServiceAvailable(t, stage.Options, stage.Conf.Name+"-nginx-sslproxy", 30, time.Second*10)
 	k8s.WaitUntilServiceAvailable(t, stage.Options, stage.Conf.Name+"-certbot-service", 30, time.Second*10)
+}
+
+func (stage *Stage) testExpectedIP(t *testing.T) {
+
+	service := k8s.GetService(t, stage.Options, stage.Conf.Name+"-nginx-sslproxy")
+	ipAddress := k8s.GetServiceEndpoint(t, stage.Options, service, 80)
+
+	if ipAddress != stage.Conf.LoadBalancerIP+":80" {
+		t.Errorf("ip address != loadBalancerIP expected: %v found: %v", stage.Conf.LoadBalancerIP, ipAddress)
+		t.Fail()
+		return
+	}
 }
 
 func (stage *Stage) testExpectedSslProxyDefaultConf(t *testing.T) {
@@ -90,24 +110,22 @@ func TestSslProxy(t *testing.T) {
 	t.Parallel()
 
 	stage := createStage()
+	stage.logConf()
 	stage.stage(t)
 
 	stage.testExpectedSslProxyDefaultConf(t)
 	stage.testProxyWorking(t)
+	if stage.Conf.IsFullTest {
+
+		stage.testExpectedIP(t)
+	}
 }
 
 func TestCert(t *testing.T) {
 	stage := createStage()
 	stage.stage(t)
 
-	service := k8s.GetService(t, stage.Options, stage.Conf.Name+"-nginx-sslproxy")
-	ipAddress := k8s.GetServiceEndpoint(t, stage.Options, service, 80)
-
-	if ipAddress != stage.Conf.LoadBalancerIP {
-		t.Error("ip address != loadBalancerIP")
-		t.Fail()
-		return
-	}
+	stage.testExpectedIP(t)
 
 	defer k8s.KubectlDeleteFromString(t, stage.Options, stage.Templates.CertTemplate)
 	k8s.KubectlApplyFromString(t, stage.Options, stage.Templates.CertTemplate)
@@ -199,11 +217,15 @@ func loadConf() *theConf {
 		err2 := yaml.Unmarshal(yamlFile, &conf)
 
 		if err != nil || err2 != nil {
+			println("using default conf.")
 			conf.IsFullTest = false
 			conf.Namespace = "recert-test-namespace"
 			conf.Name = "test"
 			conf.StageTeardown = true
+		} else {
+			println("loading conf from conf.yaml")
 		}
+
 	}
 
 	// requires that `make build` be run before this test
@@ -214,7 +236,7 @@ func loadConf() *theConf {
 		if err != nil {
 			panic("cannot load \"../../../out/images-manifest.yaml\" which must be built by \"make build\" at the root of this repository before this test can be run")
 		}
-		err = yaml.Unmarshal(yamlFile, &conf.Images)
+		err = yaml.UnmarshalStrict(yamlFile, &conf.Images)
 		if err != nil {
 			panic("cannot unmarshal \"../../../out/images-manifest.yaml\" which must be built by \"make build\" at the root of this repository before this test can be run")
 		}
@@ -224,11 +246,11 @@ func loadConf() *theConf {
 }
 
 type theConf struct {
-	IsFullTest     bool              `json:"isFullTest"`
-	LoadBalancerIP string            `json:"loadBalancerIP"`
-	Domain         string            `json:"domain"`
-	Name           string            `json:"name"`
-	Namespace      string            `json:"namespace"`
-	StageTeardown  bool              `json:"stageTeardown"`
-	Images         map[string]string `json:"images,omitempty"`
+	IsFullTest     bool              `yaml:"isFullTest,omitempty"`
+	LoadBalancerIP string            `yaml:"loadBalancerIP,omitempty"`
+	Domain         string            `yaml:"domain,omitempty"`
+	Name           string            `yaml:"name"`
+	Namespace      string            `yaml:"namespace"`
+	StageTeardown  bool              `yaml:"stageTeardown,omitempty"`
+	Images         map[string]string `yaml:"images,omitempty"`
 }
