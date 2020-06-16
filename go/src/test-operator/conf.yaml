@@ -1,0 +1,6 @@
+isFullTest: true
+domain: certbot4.mightydevco.com
+loadBalancerIP: 35.226.143.180
+namespace: recert
+name: regrond
+stageTeardown: false
