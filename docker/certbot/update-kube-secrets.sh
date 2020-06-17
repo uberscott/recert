@@ -8,16 +8,19 @@ rm /etc/letsencrypt/live/README 2>/dev/null || true
 
 mkdir /ssl2 || true
 
-for dir in /etc/letsencrypt/live/*
-do
 
-  FULLCHAIN="$(realpath $dir/fullchain.pem)"
-  PRIVKEY="$(realpath $dir/privkey.pem)"
-  
-  cp $FULLCHAIN /ssl2/$(basename $dir).crt
-  cp $PRIVKEY   /ssl2/$(basename $dir).key
+if [ -f /etc/letsencrypt/live ]; then
+  for dir in /etc/letsencrypt/live/*
+  do
 
-done
+    FULLCHAIN="$(realpath $dir/fullchain.pem)"
+    PRIVKEY="$(realpath $dir/privkey.pem)"
+    
+    cp $FULLCHAIN /ssl2/$(basename $dir).crt
+    cp $PRIVKEY   /ssl2/$(basename $dir).key
+
+  done
+fi
 
 kubectl delete secret $NEWSECRET || true
 kubectl create secret generic $NEWSECRET --from-file=/ssl2

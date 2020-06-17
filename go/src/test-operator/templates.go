@@ -85,6 +85,16 @@ spec:
               protocol: TCP`,
 }
 
+// OperatorOptionsConfigMap contains options pertaiting to an individual test
+// such as if we want the operator to do a dryrun or simulate a failure
+var OperatorOptionsConfigMap = `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: recert-operator
+data:
+  CERT_CREATE_MODE: {{ .CertRunMode }} 
+`
+
 func from(raw string, data interface{}) string {
 	tmpl, _ := template.New("tmp").Parse(raw)
 	var w bytes.Buffer

@@ -7,4 +7,12 @@ require (
 	gopkg.in/yaml.v2 v2.2.8
 	k8s.io/api v0.18.3
 	k8s.io/apimachinery v0.18.3
+	github.com/uberscott/recert/go/src/operator v0.0.1
 )
+
+replace (
+	github.com/uberscott/recert/go/src/operator v0.0.1 => ../operator
+)
+
+
+

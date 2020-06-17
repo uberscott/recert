@@ -1,4 +1,4 @@
-module operator
+module github.com/uberscott/recert/go/src/operator
 
 go 1.13
 
