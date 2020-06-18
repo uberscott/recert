@@ -13,9 +13,9 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
 
-	"operator/pkg/apis"
-	"operator/pkg/controller"
-	"operator/version"
+	"github.com/uberscott/recert/go/src/operator/pkg/apis"
+	"github.com/uberscott/recert/go/src/operator/pkg/controller"
+	"github.com/uberscott/recert/go/src/operator/version"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	kubemetrics "github.com/operator-framework/operator-sdk/pkg/kube-metrics"
@@ -36,7 +36,7 @@ import (
 // Change below variables to serve metrics on different host or port.
 var (
 	metricsHost               = "0.0.0.0"
-	metricsPort         int32 = 8383
+	metricsPort         int32 = 8483
 	operatorMetricsPort int32 = 8686
 )
 var log = logf.Log.WithName("cmd")
@@ -129,7 +129,7 @@ func main() {
 	}
 
 	// Add the Metrics Service
-	addMetrics(ctx, cfg)
+	//addMetrics(ctx, cfg)
 
 	log.Info("Starting the Cmd.")
 

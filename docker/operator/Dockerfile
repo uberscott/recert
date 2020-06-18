@@ -6,6 +6,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update
 RUN apt-get install -y curl golang make git
 
+
+
 RUN mkdir -p $GOPATH/src/github.com/operator-framework && \
     cd $GOPATH/src/github.com/operator-framework && \
     git clone https://github.com/operator-framework/operator-sdk && \ 

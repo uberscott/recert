@@ -4,7 +4,7 @@ crds:
 
 
 compile: crds
-	go build -o ../../bin/operator github.com/uberscott/operator/cmd/manager
+	go build -o ../../bin/operator github.com/uberscott/recert/go/src/operator/cmd/manager
 clean:
 	rm  ../../bin/operator 
 

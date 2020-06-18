@@ -26,5 +26,21 @@ build-operator-helm:
 	cd go/src/operator && make crds
 	cd helm/operator && make
 
+build-images:
+	cd helm/images-map && make
+
+
 deploy-operator: build-docker build-operator-helm 
-	cd out && helm upgrade --install operator operator.tgz -f images-manifest.yaml -n recert 
+	cd out && helm upgrade --install operator operator.tgz -f images-manifest.yaml 
+
+deploy-images: build-images
+	cd out && helm upgrade --install images-map images-map.tgz -f images-manifest.yaml 
+
+
+kill-dlv:
+	killall operator || true
+	killall dlv || true
+
+dlv: kill-dlv
+	cd go/src/operator && make compile
+	./tool/run-dlv.sh

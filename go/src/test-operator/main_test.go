@@ -47,7 +47,32 @@ func TestCert(t *testing.T) {
 	k8s.KubectlApplyFromString(t, stage.Options, stage.Templates.CertTemplate)
 
 	// wait for Cert to go into Updated mode
+	retry.DoWithRetry(t, "verify state updated", 30, 5*time.Second, func() (string, error) {
+		output, err := k8s.RunKubectlAndGetOutputE(t, stage.Options, "get", "cert", stage.Conf.Name, "-o", "yaml")
+		if err != nil {
+			return "fail", err
+		}
 
+		var stub CertStub
+		yaml.Unmarshal([]byte(output), &stub)
+
+		if stub.Status.State != "Updated" {
+			return "fail", fmt.Errorf("state is : %v", stub.Status.State)
+		}
+
+		return "pass", nil
+	})
+
+	// grab the latest secret
+	secret := k8s.GetSecret(t, stage.Options, stage.Conf.Name+"-nginx-sslproxy")
+
+	if secret.Data[stage.Conf.Domain+".crt"] == nil {
+		t.Errorf("expected entry for %v.crt", stage.Conf.Domain)
+	}
+
+	if secret.Data[stage.Conf.Domain+".key"] == nil {
+		t.Errorf("expected entry for %v.key", stage.Conf.Domain)
+	}
 }
 
 func TestSecretsSSLCreate(t *testing.T) {
@@ -67,7 +92,7 @@ spec:
       command: 
       - /opt/mightydevco/launcher.sh
       - mock
-      - certbot2.mightydevco.com
+      - {{ .Domain }} 
       - scott@mightydevco.com
       - {{ .Name }}-secrets-test
 
@@ -102,12 +127,10 @@ spec:
 
 	if string(newSecret.Data["certbot2.mightydevco.com.crt"]) == "" {
 		t.Error("missing certbot2.mightydevco.com.crt which should have been created")
-		t.Fail()
 	}
 
 	if string(newSecret.Data["certbot2.mightydevco.com.key"]) == "" {
 		t.Error("missing certbot2.mightydevco.com.key which should have been created")
-		t.Fail()
 	}
 
 }
@@ -189,7 +212,6 @@ func (stage *Stage) testExpectedIP(t *testing.T) {
 
 	if ipAddress != stage.Conf.LoadBalancerIP+":80" {
 		t.Errorf("ip address != loadBalancerIP expected: %v found: %v", stage.Conf.LoadBalancerIP, ipAddress)
-		t.Fail()
 		return
 	}
 }
@@ -200,13 +222,10 @@ func (stage *Stage) testExpectedSslProxyDefaultConf(t *testing.T) {
 	k8s.WaitUntilPodAvailable(t, stage.Options, pod.Name, 4, time.Second*15)
 	defaultConfig, err := k8s.RunKubectlAndGetOutputE(t, stage.Options, "exec", pod.Name, "--", "cat", "/etc/recert/conf/default.conf")
 	if err != nil {
-		t.Error(err)
-		t.Error("expected defaultConfig to be located at /etc/recert/conf/default.conf")
-		t.Fail()
+		t.Error(err, "expected defaultConfig to be located at /etc/recert/conf/default.conf")
 	}
 	if !strings.Contains(defaultConfig, "NGINX TEMPLATE FROM RECERT OPERATOR") {
 		t.Error("expected header text in default.conf file not found: 'NGINX TEMPLATE FROM RECERT OPERATOR'")
-		t.Fail()
 	}
 }
 
@@ -239,6 +258,14 @@ type TheConf struct {
 // typically expressed through the operator options ConfigMap
 type RunOptions struct {
 	CertRunMode string
+}
+
+type CertStub struct {
+	Status CertStatus `yaml:"status,omitempty"`
+}
+
+type CertStatus struct {
+	State string `yaml:"state"`
 }
 
 /////////////////////////////////////////////

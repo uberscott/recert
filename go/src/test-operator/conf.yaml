@@ -1,5 +1,5 @@
 isFullTest: true
-domain: certbot5.mightydevco.com
+domain: certbot6.mightydevco.com
 loadBalancerIP: 35.226.143.180
 namespace: recert
 name: regrond

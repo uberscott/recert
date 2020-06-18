@@ -1,0 +1,2 @@
+recertNginx: gcr.io/williams-heavy-industries/recert-nginx:latest
+recertCertbot: gcr.io/williams-heavy-industries/recert-certbot:latest
