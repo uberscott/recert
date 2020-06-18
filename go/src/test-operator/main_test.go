@@ -15,8 +15,6 @@ import (
 )
 
 func TestSslProxy(t *testing.T) {
-	t.Parallel()
-
 	stage := createStage()
 	stage.logConf()
 	stage.stage(t)
@@ -38,22 +36,9 @@ func TestCertFail(t *testing.T) {
 	defer k8s.KubectlDeleteFromString(t, stage.Options, stage.Templates.CertTemplate)
 	k8s.KubectlApplyFromString(t, stage.Options, stage.Templates.CertTemplate)
 
-	// wait for Cert to go into FailureBackoff mode
-	retry.DoWithRetry(t, "verify state FailureBackoff", 120, 1*time.Second, func() (string, error) {
-		output, err := k8s.RunKubectlAndGetOutputE(t, stage.Options, "get", "cert", stage.Conf.Name, "-o", "yaml")
-		if err != nil {
-			return "fail", err
-		}
-
-		var stub CertStub
-		yaml.Unmarshal([]byte(output), &stub)
-
-		if stub.Status.State != "FailureBackoff" {
-			return "fail", fmt.Errorf("state is : %v", stub.Status.State)
-		}
-
-		return "pass", nil
-	})
+	stage.verifyState(t, "FailureBackoff", "FailureBackoff", 120, 1*time.Second)
+	stage.verifyState(t, "Pending", "Pending", 30, 2*time.Second)
+	stage.verifyState(t, "Creating", "Creating", 30, 2*time.Second)
 }
 
 func TestCert(t *testing.T) {
@@ -229,6 +214,24 @@ func (stage *Stage) testProxyWorking(t *testing.T) {
 	ipAddress := k8s.GetServiceEndpoint(t, stage.Options, service, 80)
 	http_helper.HttpGetWithRetryWithCustomValidation(t, "http://"+ipAddress, nil, 30, 5*time.Second, func(code int, body string) bool {
 		return code == 200 && strings.Contains(body, "Hello World")
+	})
+}
+
+func (stage *Stage) verifyState(t *testing.T, desc, state string, retries int, timeout time.Duration) {
+	retry.DoWithRetry(t, desc, retries, timeout, func() (string, error) {
+		output, err := k8s.RunKubectlAndGetOutputE(t, stage.Options, "get", "cert", stage.Conf.Name, "-o", "yaml")
+		if err != nil {
+			return "fail", err
+		}
+
+		var stub CertStub
+		yaml.Unmarshal([]byte(output), &stub)
+
+		if stub.Status.State != state {
+			return "fail", fmt.Errorf("state is : %v", stub.Status.State)
+		}
+
+		return "pass", nil
 	})
 }
 
