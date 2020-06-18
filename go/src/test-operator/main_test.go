@@ -29,6 +29,33 @@ func TestSslProxy(t *testing.T) {
 	}
 }
 
+func TestCertFail(t *testing.T) {
+
+	stage := createStage()
+	stage.stage(t)
+	stage.setRunOptions(t, &RunOptions{CertRunMode: "fail"})
+
+	defer k8s.KubectlDeleteFromString(t, stage.Options, stage.Templates.CertTemplate)
+	k8s.KubectlApplyFromString(t, stage.Options, stage.Templates.CertTemplate)
+
+	// wait for Cert to go into FailureBackoff mode
+	retry.DoWithRetry(t, "verify state FailureBackoff", 120, 1*time.Second, func() (string, error) {
+		output, err := k8s.RunKubectlAndGetOutputE(t, stage.Options, "get", "cert", stage.Conf.Name, "-o", "yaml")
+		if err != nil {
+			return "fail", err
+		}
+
+		var stub CertStub
+		yaml.Unmarshal([]byte(output), &stub)
+
+		if stub.Status.State != "FailureBackoff" {
+			return "fail", fmt.Errorf("state is : %v", stub.Status.State)
+		}
+
+		return "pass", nil
+	})
+}
+
 func TestCert(t *testing.T) {
 
 	stage := createStage()
@@ -60,6 +87,10 @@ func TestCert(t *testing.T) {
 			return "fail", fmt.Errorf("state is : %v", stub.Status.State)
 		}
 
+		if stub.Status.LastUpdated == "" {
+			return "fail", fmt.Errorf("cert.Status.LastUpdated is not set")
+		}
+
 		return "pass", nil
 	})
 
@@ -73,65 +104,29 @@ func TestCert(t *testing.T) {
 	if secret.Data[stage.Conf.Domain+".key"] == nil {
 		t.Errorf("expected entry for %v.key", stage.Conf.Domain)
 	}
-}
 
-func TestSecretsSSLCreate(t *testing.T) {
-	t.Parallel()
+	// wait for pod to have updated annotation which causes a restart
+	retry.DoWithRetry(t, "verify sllproxy updated", 30, 1*time.Second, func() (string, error) {
 
-	conf := loadConf()
+		pods := k8s.ListPods(t, stage.Options, metav1.ListOptions{LabelSelector: "sslproxy=" + stage.Conf.Name})
 
-	deploymentTemplate := `apiVersion: v1
-kind: Pod
-metadata:
-  name: {{ .Name }}-secrets-test
-spec:
-  serviceAccountName: operator
-  containers:
-    - name: certbot
-      image: {{ .Images.recertCertbot }}
-      command: 
-      - /opt/mightydevco/launcher.sh
-      - mock
-      - {{ .Domain }} 
-      - scott@mightydevco.com
-      - {{ .Name }}-secrets-test
-
-      imagePullPolicy: Always
-      ports:
-      - name: http
-        containerPort: 80
-        protocol: TCP`
-
-	options := k8s.NewKubectlOptions("", "", conf.Namespace)
-	{
-		deployment := from(deploymentTemplate, conf)
-		defer k8s.KubectlDeleteFromString(t, options, deployment)
-		k8s.KubectlApplyFromString(t, options, deployment)
-	}
-
-	podName := conf.Name + "-secrets-test"
-
-	// wait for it to be 1 then wait for it to be 0
-	k8s.WaitUntilPodAvailable(t, options, podName, 1, time.Second*10)
-
-	retry.DoWithRetry(t, "get new secret", 10, time.Second*5, func() (string, error) {
-		_, err := k8s.GetSecretE(t, options, conf.Name+"-secrets-test-new")
-		if err == nil {
-			return "OK", nil
+		if len(pods) == 0 {
+			return "fail", fmt.Errorf("waiting for at least one pod")
 		}
-		return "", err
 
+		pod := pods[0]
+
+		if pod.Annotations == nil {
+			return "fail", fmt.Errorf("pod annotations are nil")
+		}
+
+		if pod.Annotations["updated"] == "" {
+			return "fail", fmt.Errorf("pod updated annotation not set")
+		}
+
+		// at this point we assume that  update occured
+		return "pass", nil
 	})
-
-	newSecret := k8s.GetSecret(t, options, conf.Name+"-secrets-test-new")
-
-	if string(newSecret.Data["certbot2.mightydevco.com.crt"]) == "" {
-		t.Error("missing certbot2.mightydevco.com.crt which should have been created")
-	}
-
-	if string(newSecret.Data["certbot2.mightydevco.com.key"]) == "" {
-		t.Error("missing certbot2.mightydevco.com.key which should have been created")
-	}
 
 }
 
@@ -265,7 +260,8 @@ type CertStub struct {
 }
 
 type CertStatus struct {
-	State string `yaml:"state"`
+	State       string `yaml:"state"`
+	LastUpdated string `yaml:"lastUpdated"`
 }
 
 /////////////////////////////////////////////

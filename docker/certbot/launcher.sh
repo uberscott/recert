@@ -1,6 +1,7 @@
 #!/bin/bash
 
 COMMAND=$1
+echo "command: $COMMAND"
 
 if [ "$COMMAND" = "create" ]; then
   shift
@@ -18,6 +19,12 @@ elif [ "$COMMAND" = "mock" ]; then
   shift
   ./mock.sh $@
   exit $?
+elif [ "$COMMAND" = "fail" ]; then
+  shift
+  ./fail.sh $@
+  exit $?
+else
+  exit 1
 fi 
 
 

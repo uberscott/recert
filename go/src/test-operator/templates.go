@@ -93,6 +93,7 @@ metadata:
   name: recert-operator
 data:
   CERT_CREATE_MODE: {{ .CertRunMode }} 
+  CERT_BACKOFF_SECONDS : "5" 
 `
 
 func from(raw string, data interface{}) string {
