@@ -2,7 +2,7 @@ all: tar
 
 crds:
 	cd ../../go/src/operator && $(MAKE) crds
-	cp ../../go/src/operator/deploy/crds/*_crd.yaml chart/templates
+	../../tool/cp-crd-to-helm.sh
 
 tar: crds
-	cd chart && tar czvf ../../../out/operator.tgz . 
+	cd chart && tar czvf ../../../out/operator.tgz .

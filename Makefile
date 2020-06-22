@@ -22,7 +22,7 @@ tools:
 clean:
 	rm -rf out
 
-build-operator-helm:
+build-operator-helm: init
 	cd go/src/operator && make crds
 	cd helm/operator && make
 

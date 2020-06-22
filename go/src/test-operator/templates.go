@@ -15,7 +15,6 @@ type TemplatesStruct struct {
 
 // RawTemplates holds raw text templates
 var RawTemplates = TemplatesStruct{
-	// Path to the Kubernetes resource config we will test.
 	SslProxyTemplate: `apiVersion: mightydevco.com/v1alpha1
 kind: SSLProxy
 metadata:
@@ -52,8 +51,7 @@ spec:
     name: http
   selector:
     app.kubernetes.io/name: {{ .Name }}
-    app.kubernetes.io/instance: {{ .Name }}
-`,
+    app.kubernetes.io/instance: {{ .Name }}`,
 
 	DeploymentTemplate: `apiVersion: apps/v1
 kind: Deployment
@@ -85,7 +83,7 @@ spec:
               protocol: TCP`,
 }
 
-// OperatorOptionsConfigMap contains options pertaiting to an individual test
+// OperatorOptionsConfigMap contains options pertaining to an individual test
 // such as if we want the operator to do a dryrun or simulate a failure
 var OperatorOptionsConfigMap = `apiVersion: v1
 kind: ConfigMap
@@ -94,7 +92,8 @@ metadata:
 data:
   CERT_CREATE_MODE: {{ .CertRunMode }} 
   CERT_BACKOFF_SECONDS : "5" 
-`
+  CERT_RENEW_INTERVAL: "5" 
+  CERT_UPDATE_REQUEUE_DELAY: "5"`
 
 func from(raw string, data interface{}) string {
 	tmpl, _ := template.New("tmp").Parse(raw)
