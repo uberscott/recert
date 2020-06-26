@@ -1,10 +1,26 @@
-# EDB CONTAINERS
+# RECERT
 
-EDB Containers provide container and kubernetes solutions to various EnterpriseDB product offerings
+RECERT is a Kubernetes Operator that creates and renews SSL certificates issued by [Let's Encrypt](http://letsencrypt.org) "A nonprofit Certificate Authority provider."
 
-## Getting Started
 
-You will need to have the following tools installed to build, run and contribute to EDB Containers:
+## WHY RECERT
+Traditional Certificate Authorities issue certificates by confirming that a business entity is who he says he is and that he owns and controls a particular domain.  The Certificate is created and the system administer happily installs the cert on his webserver.
+
+With Let's Encrypt there are no humans involved.  Ownership of a domain is proven via a challenge issued by Let's Encrypt to the the webserver via a software product called certbot.  In order for Let's Encrypt to work the webserver must have a special configuration to redirect traffic to certbot AND certbot must be able to update the certificates on the webserver.
+
+The certbot setup is very simple for traditional servers and VMs, but runs into trouble on Kubernetes due to the effermeral nature of containers.
+
+## WHAT RECERT DOES
+Recert creates a simple SSL proxy that forwards HTTPS traffic to another webserver within Kubernetes. When a Let's Encrypt challenge is issued Recert createsa Kubernetes job which will intercept the challenge and write the resulting certificate to a Kubernetes secret.  The Recert operator will then restart the SSL proxy with the certificate secrets mounted.
+
+
+## INSTALLING
+
+TODO - Write instructions on how to install the operator
+
+## DEVELOPMENT -- GETTING STARTED 
+
+You will need to have the following tools installed to build, run and contribute to RECERT Containers:
 
 * [docker](https://docs.docker.com/get-docker/)
 * [go](https://golang.org/doc/install)
@@ -67,7 +83,7 @@ You may need to setup your GOPATH environment variable:
 
 EXAMPLE .bash_profile
 ```bash
-export GOPATH=<YOUR_EDB_CONTAINERS_REBOOT_DIRECTORY>/go
+export GOPATH=<YOUR_RECERT_DIRECTORY>/go
 ```
 
 ## Building
